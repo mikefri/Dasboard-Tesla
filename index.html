@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MikDrive</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg: #0a0a0f;
+      --bg2: #111118;
+      --bg3: #1a1a24;
+      --border: #2a2a3a;
+      --red: #e31937;
+      --red2: #ff2d4f;
+      --text: #f0f0f5;
+      --text2: #8888aa;
+      --text3: #555570;
+      --green: #22c55e;
+      --amber: #f59e0b;
+      --blue: #3b82f6;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* LOGIN */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      gap: 2rem;
+    }
+
+    .logo-mark {
+      width: 64px;
+      height: 64px;
+    }
+
+    .login-title {
+      font-size: 2rem;
+      font-weight: 300;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--text);
+    }
+
+    .login-sub {
+      font-size: 0.85rem;
+      color: var(--text2);
+      letter-spacing: 0.05em;
+    }
+
+    .btn-login {
+      background: var(--red);
+      color: #fff;
+      border: none;
+      padding: 14px 48px;
+      font-size: 0.9rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-login:hover { background: var(--red2); }
+
+    /* DASHBOARD */
+    #dashboard { display: none; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg2);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .header-title {
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text3);
+      display: inline-block;
+    }
+
+    .status-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-dot.sleeping { background: var(--amber); }
+
+    .vehicle-name {
+      font-size: 0.8rem;
+      color: var(--text2);
+      font-family: 'DM Mono', monospace;
+    }
+
+    .btn-logout {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 6px 16px;
+      font-size: 0.75rem;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: all 0.2s;
+    }
+
+    .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+    .main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem;
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    /* CHARGE HERO */
+    .charge-hero {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      padding: 2.5rem;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 2rem;
+    }
+
+    .charge-percent {
+      font-size: 5rem;
+      font-weight: 300;
+      font-family: 'DM Mono', monospace;
+      line-height: 1;
+      color: var(--text);
+    }
+
+    .charge-percent span {
+      font-size: 2rem;
+      color: var(--text2);
+    }
+
+    .charge-bar-wrap {
+      margin-top: 1rem;
+      height: 4px;
+      background: var(--bg3);
+      border-radius: 2px;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .charge-bar {
+      height: 100%;
+      background: var(--green);
+      transition: width 0.8s ease;
+      border-radius: 2px;
+    }
+
+    .charge-bar.low { background: var(--red); }
+    .charge-bar.mid { background: var(--amber); }
+
+    .charge-meta {
+      display: flex;
+      gap: 2rem;
+      margin-top: 1rem;
+    }
+
+    .charge-stat label {
+      font-size: 0.7rem;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .charge-stat value {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.1rem;
+      color: var(--text);
+    }
+
+    .car-visual {
+      opacity: 0.15;
+      font-size: 6rem;
+      line-height: 1;
+    }
+
+    /* GRID STATS */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .stat-card {
+      background: var(--bg2);
+      padding: 1.5rem;
+    }
+
+    .stat-card label {
+      font-size: 0.7rem;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      display: block;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-card .val {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.4rem;
+      color: var(--text);
+    }
+
+    .stat-card .unit {
+      font-size: 0.75rem;
+      color: var(--text2);
+      margin-left: 4px;
+    }
+
+    /* COMMANDS */
+    .commands {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      margin-bottom: 1.25rem;
+    }
+
+    .cmd-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .cmd-btn {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 1rem;
+      cursor: pointer;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.5rem;
+      transition: all 0.15s;
+      text-align: left;
+    }
+
+    .cmd-btn:hover {
+      border-color: var(--red);
+      background: rgba(227,25,55,0.07);
+    }
+
+    .cmd-btn:active { transform: scale(0.98); }
+
+    .cmd-btn.loading {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .cmd-icon { font-size: 1.4rem; }
+
+    /* TOAST */
+    #toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.875rem 1.25rem;
+      font-size: 0.85rem;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.2s;
+      pointer-events: none;
+      font-family: 'DM Mono', monospace;
+      z-index: 100;
+    }
+
+    #toast.show { opacity: 1; transform: translateY(0); }
+    #toast.ok { border-color: var(--green); color: var(--green); }
+    #toast.err { border-color: var(--red); color: var(--red); }
+
+    /* WAKE */
+    .wake-banner {
+      background: rgba(245,158,11,0.1);
+      border: 1px solid var(--amber);
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .wake-banner p { font-size: 0.85rem; color: var(--amber); }
+
+    .btn-wake {
+      background: var(--amber);
+      color: #000;
+      border: none;
+      padding: 8px 20px;
+      font-size: 0.8rem;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .refresh-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--text2);
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      font-family: 'Inter', sans-serif;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: all 0.2s;
+    }
+
+    .refresh-btn:hover { border-color: var(--text2); color: var(--text); }
+
+    @media (max-width: 600px) {
+      .charge-hero { grid-template-columns: 1fr; }
+      .car-visual { display: none; }
+      .charge-percent { font-size: 3.5rem; }
+      .main { padding: 1rem; }
+      header { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <svg class="logo-mark" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" fill="#0a0a0f"/>
+    <path d="M32 8L8 20v8c0 14 10 26 24 30 14-4 24-16 24-30v-8L32 8z" fill="none" stroke="#e31937" stroke-width="2"/>
+    <path d="M20 28h24M32 20v24" stroke="#e31937" stroke-width="2" stroke-linecap="round"/>
+  </svg>
+  <div style="text-align:center">
+    <div class="login-title">MikDrive</div>
+    <div class="login-sub" style="margin-top:0.5rem">Tableau de bord véhicule Tesla</div>
+  </div>
+  <button class="btn-login" onclick="login()">Connexion Tesla</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+  <header>
+    <div class="header-left">
+      <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
+        <path d="M32 4L6 18v8c0 15 11 28 26 32 15-4 26-17 26-32v-8L32 4z" fill="none" stroke="#e31937" stroke-width="2.5"/>
+        <path d="M20 28h24M32 20v24" stroke="#e31937" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <div class="header-title">MikDrive</div>
+        <div class="vehicle-name" id="vehicle-name">—</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:1rem">
+      <span class="status-dot" id="status-dot"></span>
+      <button class="refresh-btn" onclick="loadVehicleData()">↻ Actualiser</button>
+      <button class="btn-logout" onclick="logout()">Déconnexion</button>
+    </div>
+  </header>
+
+  <div class="main">
+
+    <!-- WAKE BANNER -->
+    <div class="wake-banner" id="wake-banner" style="display:none">
+      <p>⚠️ Le véhicule est en veille — certaines données peuvent être indisponibles.</p>
+      <button class="btn-wake" onclick="sendCommand('wake_up')">Réveiller</button>
+    </div>
+
+    <!-- CHARGE HERO -->
+    <div class="charge-hero">
+      <div>
+        <div class="charge-percent" id="charge-val">—<span>%</span></div>
+        <div class="charge-bar-wrap">
+          <div class="charge-bar" id="charge-bar" style="width:0%"></div>
+        </div>
+        <div class="charge-meta">
+          <div class="charge-stat">
+            <label>Autonomie</label>
+            <value id="range-val">— km</value>
+          </div>
+          <div class="charge-stat">
+            <label>Limite</label>
+            <value id="charge-limit">—%</value>
+          </div>
+          <div class="charge-stat">
+            <label>État</label>
+            <value id="charge-state">—</value>
+          </div>
+        </div>
+      </div>
+      <div class="car-visual">🚗</div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <label>Température int.</label>
+        <div class="val" id="temp-inside">—<span class="unit">°C</span></div>
+      </div>
+      <div class="stat-card">
+        <label>Température ext.</label>
+        <div class="val" id="temp-outside">—<span class="unit">°C</span></div>
+      </div>
+      <div class="stat-card">
+        <label>Portes</label>
+        <div class="val" id="doors-state">—</div>
+      </div>
+      <div class="stat-card">
+        <label>Climatisation</label>
+        <div class="val" id="climate-state">—</div>
+      </div>
+      <div class="stat-card">
+        <label>Kilométrage</label>
+        <div class="val" id="odometer">—<span class="unit">km</span></div>
+      </div>
+      <div class="stat-card">
+        <label>Logiciel</label>
+        <div class="val" id="software" style="font-size:1rem">—</div>
+      </div>
+    </div>
+
+    <!-- COMMANDES -->
+    <div class="commands">
+      <div class="section-title">Commandes</div>
+      <div class="cmd-grid">
+        <button class="cmd-btn" onclick="sendCommand('door_lock')">
+          <span class="cmd-icon">🔒</span>Verrouiller
+        </button>
+        <button class="cmd-btn" onclick="sendCommand('door_unlock')">
+          <span class="cmd-icon">🔓</span>Déverrouiller
+        </button>
+        <button class="cmd-btn" onclick="sendCommand('auto_conditioning_start')">
+          <span class="cmd-icon">❄️</span>Clim ON
+        </button>
+        <button class="cmd-btn" onclick="sendCommand('auto_conditioning_stop')">
+          <span class="cmd-icon">⏹</span>Clim OFF
+        </button>
+        <button class="cmd-btn" onclick="sendCommand('charge_start')">
+          <span class="cmd-icon">⚡</span>Recharge ON
+        </button>
+        <button class="cmd-btn" onclick="sendCommand('charge_stop')">
+          <span class="cmd-icon">🔌</span>Recharge OFF
+        </button>
+        <button class="cmd-btn" onclick="sendCommand('honk_horn')">
+          <span class="cmd-icon">📯</span>Klaxon
+        </button>
+        <button class="cmd-btn" onclick="sendCommand('flash_lights')">
+          <span class="cmd-icon">💡</span>Flash phares
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const BACKEND = 'https://mikdrive-backend-git-main-micfris-projects.vercel.app';
+
+  let accessToken = null;
+  let vehicleId = null;
+
+  // Récupère le token depuis l'URL au retour OAuth
+  function init() {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('access_token');
+    if (token) {
+      accessToken = token;
+      localStorage.setItem('mk_token', token);
+      window.history.replaceState({}, '', window.location.pathname);
+      showDashboard();
+    } else {
+      const saved = localStorage.getItem('mk_token');
+      if (saved) {
+        accessToken = saved;
+        showDashboard();
+      }
+    }
+  }
+
+  function login() {
+    window.location.href = BACKEND + '/api/auth';
+  }
+
+  function logout() {
+    localStorage.removeItem('mk_token');
+    localStorage.removeItem('mk_vehicle_id');
+    accessToken = null;
+    vehicleId = null;
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+  }
+
+  function showDashboard() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadVehicleData();
+  }
+
+  async function loadVehicleData() {
+    if (!accessToken) return;
+
+    // Récupère d'abord la liste des véhicules
+    if (!vehicleId) {
+      try {
+        const r = await fetch(`${BACKEND}/api/vehicles?token=${accessToken}`);
+        const d = await r.json();
+        if (d.response && d.response.length > 0) {
+          vehicleId = d.response[0].id_s;
+          localStorage.setItem('mk_vehicle_id', vehicleId);
+          document.getElementById('vehicle-name').textContent = d.response[0].display_name || 'Mon Tesla';
+        }
+      } catch(e) {
+        toast('Erreur connexion backend', 'err');
+        return;
+      }
+    }
+
+    // Récupère les données du véhicule
+    try {
+      const r = await fetch(`${BACKEND}/api/vehicle?token=${accessToken}&id=${vehicleId}`);
+      const d = await r.json();
+      if (d.error) {
+        document.getElementById('wake-banner').style.display = 'flex';
+        document.getElementById('status-dot').className = 'status-dot sleeping';
+        return;
+      }
+      document.getElementById('wake-banner').style.display = 'none';
+      document.getElementById('status-dot').className = 'status-dot online';
+      renderData(d.response);
+    } catch(e) {
+      toast('Erreur chargement données', 'err');
+    }
+  }
+
+  function renderData(v) {
+    const charge = v.charge_state;
+    const climate = v.climate_state;
+    const vehicle = v.vehicle_state;
+
+    // Charge
+    const pct = charge.battery_level;
+    document.getElementById('charge-val').innerHTML = `${pct}<span>%</span>`;
+    const bar = document.getElementById('charge-bar');
+    bar.style.width = pct + '%';
+    bar.className = 'charge-bar' + (pct < 20 ? ' low' : pct < 50 ? ' mid' : '');
+
+    const range = Math.round((charge.battery_range || 0) * 1.60934);
+    document.getElementById('range-val').textContent = range + ' km';
+    document.getElementById('charge-limit').textContent = charge.charge_limit_soc + '%';
+
+    const stateMap = { Charging: 'En charge', Disconnected: 'Déconnecté', Complete: 'Complet', Stopped: 'Arrêté' };
+    document.getElementById('charge-state').textContent = stateMap[charge.charging_state] || charge.charging_state;
+
+    // Climat
+    document.getElementById('temp-inside').innerHTML = `${(climate.inside_temp || 0).toFixed(1)}<span class="unit">°C</span>`;
+    document.getElementById('temp-outside').innerHTML = `${(climate.outside_temp || 0).toFixed(1)}<span class="unit">°C</span>`;
+    document.getElementById('climate-state').textContent = climate.is_climate_on ? '✅ Active' : '⏹ Éteinte';
+
+    // Portes
+    const anyOpen = vehicle.df || vehicle.dr || vehicle.pf || vehicle.pr;
+    document.getElementById('doors-state').textContent = anyOpen ? '⚠️ Ouverte(s)' : '✅ Fermées';
+
+    // Autres
+    document.getElementById('odometer').innerHTML = `${Math.round(vehicle.odometer * 1.60934)}<span class="unit">km</span>`;
+    document.getElementById('software').textContent = vehicle.car_version?.split(' ')[0] || '—';
+  }
+
+  async function sendCommand(cmd) {
+    if (!vehicleId || !accessToken) return;
+
+    const btns = document.querySelectorAll('.cmd-btn');
+    btns.forEach(b => b.classList.add('loading'));
+
+    try {
+      const r = await fetch(`${BACKEND}/api/command?token=${accessToken}&id=${vehicleId}&cmd=${cmd}`);
+      const d = await r.json();
+      if (d.response?.result) {
+        toast('Commande envoyée ✓', 'ok');
+        setTimeout(loadVehicleData, 2000);
+      } else {
+        toast(d.response?.reason || 'Commande échouée', 'err');
+      }
+    } catch(e) {
+      toast('Erreur réseau', 'err');
+    } finally {
+      btns.forEach(b => b.classList.remove('loading'));
+    }
+  }
+
+  function toast(msg, type = '') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show ' + type;
+    setTimeout(() => t.className = '', 3000);
+  }
+
+  init();
+</script>
+</body>
+</html>
