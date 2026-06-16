@@ -3,499 +3,262 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MikDrive</title>
+  <title>MikDrive — Model 3</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap');
-
     :root {
-      --bg: #0a0a0f;
-      --bg2: #111118;
-      --bg3: #1a1a24;
-      --border: #2a2a3a;
-      --red: #e31937;
-      --red2: #ff2d4f;
-      --text: #f0f0f5;
-      --text2: #8888aa;
-      --text3: #555570;
-      --green: #22c55e;
-      --amber: #f59e0b;
-      --blue: #3b82f6;
+      --bg:#08080d;--bg2:#0f0f17;--bg3:#16161f;--bg4:#1d1d28;
+      --border:#242433;--border2:#2e2e42;
+      --red:#e31937;--red2:#ff2d4f;
+      --text:#eeeef5;--text2:#777799;--text3:#44445a;
+      --green:#22c55e;--amber:#f59e0b;--blue:#3b82f6;
     }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Inter', sans-serif;
-      min-height: 100vh;
-    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased;}
 
     /* LOGIN */
-    #login-screen {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      gap: 2rem;
-    }
+    #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;gap:2rem;background:radial-gradient(ellipse at 50% 0%,rgba(227,25,55,0.08) 0%,transparent 60%);}
+    .login-logo{width:72px;height:72px;border:1px solid var(--border2);border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--bg2);}
+    .login-title{font-size:1.75rem;font-weight:300;letter-spacing:0.25em;text-transform:uppercase;}
+    .login-sub{font-size:0.8rem;color:var(--text2);letter-spacing:0.08em;}
+    .btn-login{background:var(--red);color:#fff;border:none;padding:13px 52px;font-size:0.85rem;font-family:'Inter',sans-serif;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;cursor:pointer;transition:background 0.2s;}
+    .btn-login:hover{background:var(--red2);}
 
-    .logo-mark {
-      width: 64px;
-      height: 64px;
-    }
+    /* HEADER */
+    #dashboard{display:none;}
+    header{display:flex;align-items:center;justify-content:space-between;padding:1rem 2rem;border-bottom:1px solid var(--border);background:rgba(8,8,13,0.95);backdrop-filter:blur(12px);position:sticky;top:0;z-index:100;}
+    .header-left{display:flex;align-items:center;gap:1rem;}
+    .header-logo{width:32px;height:32px;border:1px solid var(--border2);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .header-title{font-size:0.85rem;font-weight:600;letter-spacing:0.15em;text-transform:uppercase;}
+    .header-sub{font-size:0.7rem;color:var(--text2);font-family:'DM Mono',monospace;margin-top:1px;}
+    .header-right{display:flex;align-items:center;gap:0.75rem;}
+    .status-pill{display:flex;align-items:center;gap:6px;padding:4px 10px;border:1px solid var(--border);font-size:0.7rem;color:var(--text2);font-family:'DM Mono',monospace;}
+    .dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+    .dot.online{background:var(--green);box-shadow:0 0 6px var(--green);}
+    .dot.sleeping{background:var(--amber);}
+    .btn-sm{background:none;border:1px solid var(--border);color:var(--text2);padding:5px 14px;font-size:0.72rem;font-family:'Inter',sans-serif;cursor:pointer;letter-spacing:0.05em;transition:all 0.15s;}
+    .btn-sm:hover{border-color:var(--text2);color:var(--text);}
+    .btn-sm.danger:hover{border-color:var(--red);color:var(--red);}
+    .refresh-ring{width:16px;height:16px;border:1.5px solid var(--border2);border-top-color:var(--green);border-radius:50%;animation:spin 1s linear infinite;display:none;}
+    .refresh-ring.active{display:block;}
+    @keyframes spin{to{transform:rotate(360deg);}}
 
-    .login-title {
-      font-size: 2rem;
-      font-weight: 300;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--text);
-    }
-
-    .login-sub {
-      font-size: 0.85rem;
-      color: var(--text2);
-      letter-spacing: 0.05em;
-    }
-
-    .btn-login {
-      background: var(--red);
-      color: #fff;
-      border: none;
-      padding: 14px 48px;
-      font-size: 0.9rem;
-      font-family: 'Inter', sans-serif;
-      font-weight: 500;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .btn-login:hover { background: var(--red2); }
-
-    /* DASHBOARD */
-    #dashboard { display: none; }
-
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.25rem 2rem;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg2);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .header-title {
-      font-size: 1rem;
-      font-weight: 500;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-    }
-
-    .status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--text3);
-      display: inline-block;
-    }
-
-    .status-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
-    .status-dot.sleeping { background: var(--amber); }
-
-    .vehicle-name {
-      font-size: 0.8rem;
-      color: var(--text2);
-      font-family: 'DM Mono', monospace;
-    }
-
-    .btn-logout {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--text2);
-      padding: 6px 16px;
-      font-size: 0.75rem;
-      font-family: 'Inter', sans-serif;
-      cursor: pointer;
-      letter-spacing: 0.05em;
-      transition: all 0.2s;
-    }
-
-    .btn-logout:hover { border-color: var(--red); color: var(--red); }
-
-    .main {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 2rem;
-      display: grid;
-      gap: 1.5rem;
-    }
-
-    /* CHARGE HERO */
-    .charge-hero {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      padding: 2.5rem;
-      display: grid;
-      grid-template-columns: 1fr auto;
-      align-items: center;
-      gap: 2rem;
-    }
-
-    .charge-percent {
-      font-size: 5rem;
-      font-weight: 300;
-      font-family: 'DM Mono', monospace;
-      line-height: 1;
-      color: var(--text);
-    }
-
-    .charge-percent span {
-      font-size: 2rem;
-      color: var(--text2);
-    }
-
-    .charge-bar-wrap {
-      margin-top: 1rem;
-      height: 4px;
-      background: var(--bg3);
-      border-radius: 2px;
-      overflow: hidden;
-      width: 100%;
-    }
-
-    .charge-bar {
-      height: 100%;
-      background: var(--green);
-      transition: width 0.8s ease;
-      border-radius: 2px;
-    }
-
-    .charge-bar.low { background: var(--red); }
-    .charge-bar.mid { background: var(--amber); }
-
-    .charge-meta {
-      display: flex;
-      gap: 2rem;
-      margin-top: 1rem;
-    }
-
-    .charge-stat label {
-      font-size: 0.7rem;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      display: block;
-      margin-bottom: 4px;
-    }
-
-    .charge-stat value {
-      font-family: 'DM Mono', monospace;
-      font-size: 1.1rem;
-      color: var(--text);
-    }
-
-    .car-visual {
-      opacity: 0.15;
-      font-size: 6rem;
-      line-height: 1;
-    }
-
-    /* GRID STATS */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 1px;
-      background: var(--border);
-      border: 1px solid var(--border);
-    }
-
-    .stat-card {
-      background: var(--bg2);
-      padding: 1.5rem;
-    }
-
-    .stat-card label {
-      font-size: 0.7rem;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      display: block;
-      margin-bottom: 0.5rem;
-    }
-
-    .stat-card .val {
-      font-family: 'DM Mono', monospace;
-      font-size: 1.4rem;
-      color: var(--text);
-    }
-
-    .stat-card .unit {
-      font-size: 0.75rem;
-      color: var(--text2);
-      margin-left: 4px;
-    }
-
-    /* COMMANDS */
-    .commands {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      padding: 1.5rem;
-    }
-
-    .section-title {
-      font-size: 0.7rem;
-      color: var(--text3);
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      margin-bottom: 1.25rem;
-    }
-
-    .cmd-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 0.75rem;
-    }
-
-    .cmd-btn {
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 1rem;
-      cursor: pointer;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.8rem;
-      font-weight: 500;
-      letter-spacing: 0.05em;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 0.5rem;
-      transition: all 0.15s;
-      text-align: left;
-    }
-
-    .cmd-btn:hover {
-      border-color: var(--red);
-      background: rgba(227,25,55,0.07);
-    }
-
-    .cmd-btn:active { transform: scale(0.98); }
-
-    .cmd-btn.loading {
-      opacity: 0.5;
-      pointer-events: none;
-    }
-
-    .cmd-icon { font-size: 1.4rem; }
-
-    /* TOAST */
-    #toast {
-      position: fixed;
-      bottom: 2rem;
-      right: 2rem;
-      background: var(--bg3);
-      border: 1px solid var(--border);
-      color: var(--text);
-      padding: 0.875rem 1.25rem;
-      font-size: 0.85rem;
-      opacity: 0;
-      transform: translateY(8px);
-      transition: all 0.2s;
-      pointer-events: none;
-      font-family: 'DM Mono', monospace;
-      z-index: 100;
-    }
-
-    #toast.show { opacity: 1; transform: translateY(0); }
-    #toast.ok { border-color: var(--green); color: var(--green); }
-    #toast.err { border-color: var(--red); color: var(--red); }
+    /* LAYOUT */
+    .main{max-width:1200px;margin:0 auto;padding:1.5rem 2rem;display:grid;grid-template-columns:1fr 1fr;grid-template-areas:"wake wake""hero map""stats stats""charge-detail climate""commands commands""log log";gap:1px;background:var(--border);}
+    .panel{background:var(--bg2);padding:1.5rem;}
+    .panel-label{font-size:0.65rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.15em;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;}
 
     /* WAKE */
-    .wake-banner {
-      background: rgba(245,158,11,0.1);
-      border: 1px solid var(--amber);
-      padding: 1rem 1.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
+    .wake-banner{grid-area:wake;background:rgba(245,158,11,0.07);border-bottom:1px solid var(--amber);padding:0.875rem 1.5rem;display:none;align-items:center;justify-content:space-between;gap:1rem;}
+    .wake-banner p{font-size:0.82rem;color:var(--amber);}
+    .btn-wake{background:var(--amber);color:#000;border:none;padding:7px 20px;font-size:0.78rem;font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap;}
+
+    /* HERO */
+    .hero{grid-area:hero;padding:2rem 1.5rem;position:relative;overflow:hidden;}
+    .hero::before{content:'';position:absolute;top:0;right:0;width:200px;height:200px;background:radial-gradient(circle,rgba(34,197,94,0.05) 0%,transparent 70%);pointer-events:none;}
+    .charge-number{font-size:6rem;font-weight:200;font-family:'DM Mono',monospace;line-height:1;letter-spacing:-0.02em;}
+    .charge-number .pct{font-size:2.5rem;color:var(--text3);}
+    .charge-bar-track{margin-top:1.25rem;height:3px;background:var(--bg4);}
+    .charge-bar-fill{height:100%;background:var(--green);transition:width 1s cubic-bezier(0.4,0,0.2,1);}
+    .charge-bar-fill.low{background:var(--red);}
+    .charge-bar-fill.mid{background:var(--amber);}
+    .charge-meta{display:grid;grid-template-columns:repeat(3,1fr);margin-top:1.25rem;border:1px solid var(--border);}
+    .charge-meta-item{padding:0.875rem;border-right:1px solid var(--border);}
+    .charge-meta-item:last-child{border-right:none;}
+    .meta-label{font-size:0.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;display:block;margin-bottom:4px;}
+    .meta-val{font-family:'DM Mono',monospace;font-size:1rem;color:var(--text);}
+
+    /* MAP */
+    .map-panel{grid-area:map;padding:0;position:relative;min-height:280px;}
+    #map{width:100%;height:100%;min-height:280px;}
+    .map-overlay{position:absolute;top:0.75rem;left:0.75rem;background:rgba(8,8,13,0.85);border:1px solid var(--border);padding:6px 10px;font-size:0.65rem;color:var(--text2);font-family:'DM Mono',monospace;z-index:500;pointer-events:none;max-width:200px;}
+
+    /* STATS */
+    .stats-row{grid-area:stats;display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--border);}
+    .stat{background:var(--bg2);padding:1.25rem 1.5rem;}
+    .stat label{font-size:0.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;display:block;margin-bottom:0.5rem;}
+    .stat .val{font-family:'DM Mono',monospace;font-size:1.25rem;color:var(--text);}
+    .stat .unit{font-size:0.7rem;color:var(--text2);margin-left:3px;}
+
+    /* CHARGE DETAIL */
+    .charge-detail{grid-area:charge-detail;}
+    .charge-detail-row{display:flex;justify-content:space-between;align-items:center;padding:0.75rem 0;border-bottom:1px solid var(--border);font-size:0.82rem;}
+    .charge-detail-row:last-child{border-bottom:none;}
+    .charge-detail-row span{color:var(--text2);font-size:0.75rem;}
+    .charge-detail-row strong{font-family:'DM Mono',monospace;font-size:0.9rem;}
+    .limit-control{display:flex;align-items:center;gap:0.5rem;}
+    .limit-input{background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:0.85rem;padding:4px 8px;width:56px;text-align:center;}
+    .btn-set{background:var(--bg3);border:1px solid var(--border2);color:var(--text2);font-size:0.72rem;font-family:'Inter',sans-serif;padding:4px 10px;cursor:pointer;transition:all 0.15s;}
+    .btn-set:hover{border-color:var(--green);color:var(--green);}
+
+    /* CLIMATE */
+    .climate-panel{grid-area:climate;}
+    .temp-display{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin-bottom:1rem;}
+    .temp-card{background:var(--bg3);padding:1rem;text-align:center;}
+    .temp-card label{font-size:0.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;display:block;margin-bottom:0.5rem;}
+    .temp-big{font-family:'DM Mono',monospace;font-size:2rem;font-weight:300;color:var(--text);}
+    .temp-big .unit{font-size:0.9rem;color:var(--text2);}
+    .climate-actions{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;}
+
+    /* COMMANDS */
+    .commands-panel{grid-area:commands;}
+    .cmd-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:1px;background:var(--border);}
+    .cmd-btn{background:var(--bg3);border:none;color:var(--text);padding:1.1rem 1rem;cursor:pointer;font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:500;display:flex;flex-direction:column;align-items:flex-start;gap:0.5rem;transition:background 0.15s;text-align:left;}
+    .cmd-btn:hover{background:var(--bg4);}
+    .cmd-btn:active{background:rgba(227,25,55,0.08);}
+    .cmd-btn.loading{opacity:0.4;pointer-events:none;}
+    .cmd-icon{font-size:1.3rem;}
+
+    /* LOG */
+    .log-panel{grid-column:1/-1;background:var(--bg2);padding:1.5rem;}
+    .log-list{display:flex;flex-direction:column;gap:0.4rem;max-height:140px;overflow-y:auto;}
+    .log-entry{display:flex;gap:1rem;font-family:'DM Mono',monospace;font-size:0.72rem;}
+    .log-time{color:var(--text3);white-space:nowrap;}
+    .log-msg{color:var(--text2);}
+    .log-msg.ok{color:var(--green);}
+    .log-msg.err{color:var(--red);}
+
+    /* TOAST */
+    #toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg3);border:1px solid var(--border2);color:var(--text);padding:0.75rem 1.1rem;font-size:0.8rem;font-family:'DM Mono',monospace;opacity:0;transform:translateY(6px);transition:all 0.2s;pointer-events:none;z-index:200;}
+    #toast.show{opacity:1;transform:translateY(0);}
+    #toast.ok{border-color:var(--green);color:var(--green);}
+    #toast.err{border-color:var(--red);color:var(--red);}
+
+    /* RESPONSIVE */
+    @media(max-width:768px){
+      .main{grid-template-columns:1fr;grid-template-areas:"wake""hero""map""stats""charge-detail""climate""commands""log";padding:0;}
+      .stats-row{grid-template-columns:repeat(3,1fr);}
+      .charge-number{font-size:4rem;}
+      header{padding:0.875rem 1rem;}
     }
-
-    .wake-banner p { font-size: 0.85rem; color: var(--amber); }
-
-    .btn-wake {
-      background: var(--amber);
-      color: #000;
-      border: none;
-      padding: 8px 20px;
-      font-size: 0.8rem;
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .refresh-btn {
-      background: none;
-      border: 1px solid var(--border);
-      color: var(--text2);
-      padding: 6px 14px;
-      font-size: 0.75rem;
-      font-family: 'Inter', sans-serif;
-      cursor: pointer;
-      letter-spacing: 0.05em;
-      transition: all 0.2s;
-    }
-
-    .refresh-btn:hover { border-color: var(--text2); color: var(--text); }
-
-    @media (max-width: 600px) {
-      .charge-hero { grid-template-columns: 1fr; }
-      .car-visual { display: none; }
-      .charge-percent { font-size: 3.5rem; }
-      .main { padding: 1rem; }
-      header { padding: 1rem; }
-    }
+    @media(max-width:480px){.stats-row{grid-template-columns:repeat(2,1fr);}}
   </style>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="login-screen">
-  <svg class="logo-mark" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect width="64" height="64" fill="#0a0a0f"/>
-    <path d="M32 8L8 20v8c0 14 10 26 24 30 14-4 24-16 24-30v-8L32 8z" fill="none" stroke="#e31937" stroke-width="2"/>
-    <path d="M20 28h24M32 20v24" stroke="#e31937" stroke-width="2" stroke-linecap="round"/>
-  </svg>
-  <div style="text-align:center">
+  <div class="login-logo">
+    <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
+      <path d="M32 6L8 19v9c0 15 10 28 24 32 14-4 24-17 24-32v-9L32 6z" fill="none" stroke="#e31937" stroke-width="2"/>
+      <path d="M21 29h22M32 20v22" stroke="#e31937" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </div>
+  <div style="text-align:center;display:flex;flex-direction:column;gap:0.4rem;">
     <div class="login-title">MikDrive</div>
-    <div class="login-sub" style="margin-top:0.5rem">Tableau de bord véhicule Tesla</div>
+    <div class="login-sub">Model 3 Highland · Tableau de bord</div>
   </div>
   <button class="btn-login" onclick="login()">Connexion Tesla</button>
 </div>
 
-<!-- DASHBOARD -->
 <div id="dashboard">
   <header>
     <div class="header-left">
-      <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
-        <path d="M32 4L6 18v8c0 15 11 28 26 32 15-4 26-17 26-32v-8L32 4z" fill="none" stroke="#e31937" stroke-width="2.5"/>
-        <path d="M20 28h24M32 20v24" stroke="#e31937" stroke-width="2" stroke-linecap="round"/>
-      </svg>
+      <div class="header-logo">
+        <svg width="16" height="16" viewBox="0 0 64 64" fill="none">
+          <path d="M32 6L8 19v9c0 15 10 28 24 32 14-4 24-17 24-32v-9L32 6z" fill="none" stroke="#e31937" stroke-width="2.5"/>
+          <path d="M21 29h22M32 20v22" stroke="#e31937" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
       <div>
         <div class="header-title">MikDrive</div>
-        <div class="vehicle-name" id="vehicle-name">—</div>
+        <div class="header-sub" id="vehicle-name">Model 3 Highland</div>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:1rem">
-      <span class="status-dot" id="status-dot"></span>
-      <button class="refresh-btn" onclick="loadVehicleData()">↻ Actualiser</button>
-      <button class="btn-logout" onclick="logout()">Déconnexion</button>
+    <div class="header-right">
+      <div class="refresh-ring" id="refresh-ring"></div>
+      <div class="status-pill">
+        <div class="dot" id="status-dot"></div>
+        <span id="status-text">—</span>
+      </div>
+      <button class="btn-sm" onclick="loadVehicleData()">↻ Actualiser</button>
+      <button class="btn-sm danger" onclick="logout()">Déconnexion</button>
     </div>
   </header>
 
   <div class="main">
 
-    <!-- WAKE BANNER -->
-    <div class="wake-banner" id="wake-banner" style="display:none">
-      <p>⚠️ Le véhicule est en veille — certaines données peuvent être indisponibles.</p>
+    <div class="wake-banner" id="wake-banner">
+      <p>⚡ Véhicule en veille — réveillez-le pour accéder aux données temps réel.</p>
       <button class="btn-wake" onclick="sendCommand('wake_up')">Réveiller</button>
     </div>
 
-    <!-- CHARGE HERO -->
-    <div class="charge-hero">
-      <div>
-        <div class="charge-percent" id="charge-val">—<span>%</span></div>
-        <div class="charge-bar-wrap">
-          <div class="charge-bar" id="charge-bar" style="width:0%"></div>
-        </div>
-        <div class="charge-meta">
-          <div class="charge-stat">
-            <label>Autonomie</label>
-            <value id="range-val">— km</value>
-          </div>
-          <div class="charge-stat">
-            <label>Limite</label>
-            <value id="charge-limit">—%</value>
-          </div>
-          <div class="charge-stat">
-            <label>État</label>
-            <value id="charge-state">—</value>
-          </div>
-        </div>
+    <div class="panel hero">
+      <div class="panel-label">
+        <span>Batterie</span>
+        <span id="last-updated" style="font-family:'DM Mono',monospace;font-size:0.65rem;">—</span>
       </div>
-      <div class="car-visual">🚗</div>
-    </div>
-
-    <!-- STATS -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <label>Température int.</label>
-        <div class="val" id="temp-inside">—<span class="unit">°C</span></div>
+      <div class="charge-number" id="charge-val">—<span class="pct">%</span></div>
+      <div class="charge-bar-track">
+        <div class="charge-bar-fill" id="charge-bar" style="width:0%"></div>
       </div>
-      <div class="stat-card">
-        <label>Température ext.</label>
-        <div class="val" id="temp-outside">—<span class="unit">°C</span></div>
-      </div>
-      <div class="stat-card">
-        <label>Portes</label>
-        <div class="val" id="doors-state">—</div>
-      </div>
-      <div class="stat-card">
-        <label>Climatisation</label>
-        <div class="val" id="climate-state">—</div>
-      </div>
-      <div class="stat-card">
-        <label>Kilométrage</label>
-        <div class="val" id="odometer">—<span class="unit">km</span></div>
-      </div>
-      <div class="stat-card">
-        <label>Logiciel</label>
-        <div class="val" id="software" style="font-size:1rem">—</div>
+      <div class="charge-meta">
+        <div class="charge-meta-item"><span class="meta-label">Autonomie</span><span class="meta-val" id="range-val">—</span></div>
+        <div class="charge-meta-item"><span class="meta-label">Limite</span><span class="meta-val" id="charge-limit">—</span></div>
+        <div class="charge-meta-item"><span class="meta-label">État</span><span class="meta-val" id="charge-state">—</span></div>
       </div>
     </div>
 
-    <!-- COMMANDES -->
-    <div class="commands">
-      <div class="section-title">Commandes</div>
+    <div class="map-panel">
+      <div id="map"></div>
+      <div class="map-overlay" id="map-address">Localisation indisponible</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><label>Temp. intérieure</label><div class="val" id="temp-inside">—<span class="unit">°C</span></div></div>
+      <div class="stat"><label>Temp. extérieure</label><div class="val" id="temp-outside">—<span class="unit">°C</span></div></div>
+      <div class="stat"><label>Portes</label><div class="val" id="doors-state">—</div></div>
+      <div class="stat"><label>Kilométrage</label><div class="val" id="odometer">—<span class="unit">km</span></div></div>
+      <div class="stat"><label>Logiciel</label><div class="val" id="software" style="font-size:0.9rem">—</div></div>
+    </div>
+
+    <div class="panel charge-detail">
+      <div class="panel-label">Détails recharge</div>
+      <div class="charge-detail-row"><span>Puissance</span><strong id="charge-power">— kW</strong></div>
+      <div class="charge-detail-row"><span>Temps restant</span><strong id="charge-time">—</strong></div>
+      <div class="charge-detail-row"><span>Courant</span><strong id="charge-amps">— A</strong></div>
+      <div class="charge-detail-row"><span>Tension</span><strong id="charge-volts">— V</strong></div>
+      <div class="charge-detail-row"><span>Mode Sentry</span><strong id="sentry-state">—</strong></div>
+      <div class="charge-detail-row">
+        <span>Seuil de charge</span>
+        <div class="limit-control">
+          <input type="number" class="limit-input" id="limit-input" min="50" max="100" value="80"/>
+          <button class="btn-set" onclick="setChargeLimit()">Appliquer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel climate-panel">
+      <div class="panel-label">Climatisation</div>
+      <div class="temp-display">
+        <div class="temp-card"><label>Intérieur</label><div class="temp-big" id="temp-in-big">—<span class="unit">°C</span></div></div>
+        <div class="temp-card"><label>Extérieur</label><div class="temp-big" id="temp-out-big">—<span class="unit">°C</span></div></div>
+      </div>
+      <div class="climate-actions">
+        <button class="cmd-btn" onclick="sendCommand('auto_conditioning_start')" style="background:var(--bg4)"><span class="cmd-icon">❄️</span>Clim ON</button>
+        <button class="cmd-btn" onclick="sendCommand('auto_conditioning_stop')" style="background:var(--bg4)"><span class="cmd-icon">⏹</span>Clim OFF</button>
+      </div>
+    </div>
+
+    <div class="panel commands-panel">
+      <div class="panel-label">Commandes véhicule</div>
       <div class="cmd-grid">
-        <button class="cmd-btn" onclick="sendCommand('door_lock')">
-          <span class="cmd-icon">🔒</span>Verrouiller
-        </button>
-        <button class="cmd-btn" onclick="sendCommand('door_unlock')">
-          <span class="cmd-icon">🔓</span>Déverrouiller
-        </button>
-        <button class="cmd-btn" onclick="sendCommand('auto_conditioning_start')">
-          <span class="cmd-icon">❄️</span>Clim ON
-        </button>
-        <button class="cmd-btn" onclick="sendCommand('auto_conditioning_stop')">
-          <span class="cmd-icon">⏹</span>Clim OFF
-        </button>
-        <button class="cmd-btn" onclick="sendCommand('charge_start')">
-          <span class="cmd-icon">⚡</span>Recharge ON
-        </button>
-        <button class="cmd-btn" onclick="sendCommand('charge_stop')">
-          <span class="cmd-icon">🔌</span>Recharge OFF
-        </button>
-        <button class="cmd-btn" onclick="sendCommand('honk_horn')">
-          <span class="cmd-icon">📯</span>Klaxon
-        </button>
-        <button class="cmd-btn" onclick="sendCommand('flash_lights')">
-          <span class="cmd-icon">💡</span>Flash phares
-        </button>
+        <button class="cmd-btn" onclick="sendCommand('door_lock')"><span class="cmd-icon">🔒</span>Verrouiller</button>
+        <button class="cmd-btn" onclick="sendCommand('door_unlock')"><span class="cmd-icon">🔓</span>Déverrouiller</button>
+        <button class="cmd-btn" onclick="sendCommand('charge_start')"><span class="cmd-icon">⚡</span>Recharge ON</button>
+        <button class="cmd-btn" onclick="sendCommand('charge_stop')"><span class="cmd-icon">🔌</span>Recharge OFF</button>
+        <button class="cmd-btn" onclick="toggleSentry()"><span class="cmd-icon">👁</span>Sentry</button>
+        <button class="cmd-btn" onclick="sendCommand('honk_horn')"><span class="cmd-icon">📯</span>Klaxon</button>
+        <button class="cmd-btn" onclick="sendCommand('flash_lights')"><span class="cmd-icon">💡</span>Flash phares</button>
+        <button class="cmd-btn" onclick="sendCommand('remote_start_drive')"><span class="cmd-icon">🚗</span>Démarrage</button>
+      </div>
+    </div>
+
+    <div class="log-panel">
+      <div class="panel-label">Journal des actions</div>
+      <div class="log-list" id="log-list">
+        <div class="log-entry"><span class="log-time">—</span><span class="log-msg">En attente...</span></div>
       </div>
     </div>
 
@@ -506,37 +269,28 @@
 
 <script>
   const BACKEND = 'https://mikdrive-backend-production.up.railway.app';
+  let accessToken = null, vehicleId = null, map = null, marker = null, sentryOn = false;
 
-  let accessToken = null;
-  let vehicleId = null;
-
-  // Récupère le token depuis l'URL au retour OAuth
   function init() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('access_token');
     if (token) {
       accessToken = token;
       localStorage.setItem('mk_token', token);
+      const refresh = params.get('refresh_token');
+      if (refresh) localStorage.setItem('mk_refresh', refresh);
       window.history.replaceState({}, '', window.location.pathname);
       showDashboard();
     } else {
       const saved = localStorage.getItem('mk_token');
-      if (saved) {
-        accessToken = saved;
-        showDashboard();
-      }
+      if (saved) { accessToken = saved; showDashboard(); }
     }
   }
 
-  function login() {
-    window.location.href = BACKEND + '/api/auth';
-  }
+  function login() { window.location.href = BACKEND + '/api/auth'; }
 
   function logout() {
-    localStorage.removeItem('mk_token');
-    localStorage.removeItem('mk_vehicle_id');
-    accessToken = null;
-    vehicleId = null;
+    localStorage.clear(); accessToken = null; vehicleId = null;
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('dashboard').style.display = 'none';
   }
@@ -544,104 +298,159 @@
   function showDashboard() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
+    initMap();
     loadVehicleData();
+    setInterval(loadVehicleData, 5 * 60 * 1000);
+  }
+
+  function initMap() {
+    if (map) return;
+    map = L.map('map', { zoomControl: false }).setView([46.8, 2.3], 5);
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution:'© CartoDB', maxZoom:19 }).addTo(map);
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
+  }
+
+  function updateMap(lat, lng) {
+    if (!map) return;
+    const pos = [lat, lng];
+    map.setView(pos, 15);
+    if (marker) marker.setLatLng(pos);
+    else marker = L.circleMarker(pos, { radius:10, fillColor:'#e31937', color:'#fff', weight:2, opacity:1, fillOpacity:1 }).addTo(map);
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
+      .then(r => r.json())
+      .then(d => {
+        const a = d.address;
+        const str = [a.road, a.city || a.town || a.village].filter(Boolean).join(', ');
+        document.getElementById('map-address').textContent = str || 'Position connue';
+      }).catch(() => {});
   }
 
   async function loadVehicleData() {
     if (!accessToken) return;
+    document.getElementById('refresh-ring').classList.add('active');
 
-    // Récupère d'abord la liste des véhicules
     if (!vehicleId) {
       try {
         const r = await fetch(`${BACKEND}/api/vehicles?token=${accessToken}`);
         const d = await r.json();
-        if (d.response && d.response.length > 0) {
+        if (d.response?.length > 0) {
           vehicleId = d.response[0].id_s;
-          localStorage.setItem('mk_vehicle_id', vehicleId);
-          document.getElementById('vehicle-name').textContent = d.response[0].display_name || 'Mon Tesla';
-        }
-      } catch(e) {
-        toast('Erreur connexion backend', 'err');
-        return;
-      }
+          document.getElementById('vehicle-name').textContent = d.response[0].display_name || 'Model 3 Highland';
+        } else { addLog('Aucun véhicule trouvé','err'); document.getElementById('refresh-ring').classList.remove('active'); return; }
+      } catch(e) { addLog('Erreur connexion backend','err'); document.getElementById('refresh-ring').classList.remove('active'); return; }
     }
 
-    // Récupère les données du véhicule
     try {
       const r = await fetch(`${BACKEND}/api/vehicle?token=${accessToken}&id=${vehicleId}`);
       const d = await r.json();
-      if (d.error) {
+      document.getElementById('refresh-ring').classList.remove('active');
+
+      if (d.error || !d.response) {
         document.getElementById('wake-banner').style.display = 'flex';
-        document.getElementById('status-dot').className = 'status-dot sleeping';
+        document.getElementById('status-dot').className = 'dot sleeping';
+        document.getElementById('status-text').textContent = 'En veille';
+        addLog('Véhicule en veille','err');
         return;
       }
+
       document.getElementById('wake-banner').style.display = 'none';
-      document.getElementById('status-dot').className = 'status-dot online';
+      document.getElementById('status-dot').className = 'dot online';
+      document.getElementById('status-text').textContent = 'En ligne';
+      document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       renderData(d.response);
+      addLog('Données actualisées','ok');
     } catch(e) {
-      toast('Erreur chargement données', 'err');
+      document.getElementById('refresh-ring').classList.remove('active');
+      addLog('Erreur chargement','err');
     }
   }
 
   function renderData(v) {
-    const charge = v.charge_state;
-    const climate = v.climate_state;
-    const vehicle = v.vehicle_state;
+    const charge = v.charge_state, climate = v.climate_state, vehicle = v.vehicle_state, drive = v.drive_state;
 
-    // Charge
     const pct = charge.battery_level;
-    document.getElementById('charge-val').innerHTML = `${pct}<span>%</span>`;
+    document.getElementById('charge-val').innerHTML = `${pct}<span class="pct">%</span>`;
     const bar = document.getElementById('charge-bar');
     bar.style.width = pct + '%';
-    bar.className = 'charge-bar' + (pct < 20 ? ' low' : pct < 50 ? ' mid' : '');
+    bar.className = 'charge-bar-fill' + (pct < 20 ? ' low' : pct < 40 ? ' mid' : '');
 
     const range = Math.round((charge.battery_range || 0) * 1.60934);
     document.getElementById('range-val').textContent = range + ' km';
     document.getElementById('charge-limit').textContent = charge.charge_limit_soc + '%';
+    document.getElementById('limit-input').value = charge.charge_limit_soc;
 
-    const stateMap = { Charging: 'En charge', Disconnected: 'Déconnecté', Complete: 'Complet', Stopped: 'Arrêté' };
+    const stateMap = { Charging:'⚡ En charge', Disconnected:'— Déconnecté', Complete:'✅ Complet', Stopped:'⏸ Arrêté' };
     document.getElementById('charge-state').textContent = stateMap[charge.charging_state] || charge.charging_state;
 
-    // Climat
-    document.getElementById('temp-inside').innerHTML = `${(climate.inside_temp || 0).toFixed(1)}<span class="unit">°C</span>`;
-    document.getElementById('temp-outside').innerHTML = `${(climate.outside_temp || 0).toFixed(1)}<span class="unit">°C</span>`;
-    document.getElementById('climate-state').textContent = climate.is_climate_on ? '✅ Active' : '⏹ Éteinte';
+    const power = charge.charger_power || 0;
+    document.getElementById('charge-power').textContent = power > 0 ? power + ' kW' : '—';
 
-    // Portes
-    const anyOpen = vehicle.df || vehicle.dr || vehicle.pf || vehicle.pr;
-    document.getElementById('doors-state').textContent = anyOpen ? '⚠️ Ouverte(s)' : '✅ Fermées';
+    const hrs = charge.time_to_full_charge;
+    if (hrs && hrs > 0) {
+      const h = Math.floor(hrs), m = Math.round((hrs - h) * 60);
+      document.getElementById('charge-time').textContent = h > 0 ? `${h}h ${m}min` : `${m} min`;
+    } else document.getElementById('charge-time').textContent = '—';
 
-    // Autres
+    document.getElementById('charge-amps').textContent = (charge.charger_actual_current || 0) + ' A';
+    document.getElementById('charge-volts').textContent = (charge.charger_voltage || 0) + ' V';
+
+    sentryOn = vehicle.sentry_mode || false;
+    document.getElementById('sentry-state').textContent = sentryOn ? '🟢 Actif' : '⚫ Inactif';
+
+    const tin = (climate.inside_temp || 0).toFixed(1);
+    const tout = (climate.outside_temp || 0).toFixed(1);
+    document.getElementById('temp-inside').innerHTML = `${tin}<span class="unit">°C</span>`;
+    document.getElementById('temp-outside').innerHTML = `${tout}<span class="unit">°C</span>`;
+    document.getElementById('temp-in-big').innerHTML = `${tin}<span class="unit">°C</span>`;
+    document.getElementById('temp-out-big').innerHTML = `${tout}<span class="unit">°C</span>`;
+
+    const anyOpen = vehicle.df || vehicle.dr || vehicle.pf || vehicle.pr || vehicle.ft || vehicle.rt;
+    document.getElementById('doors-state').textContent = anyOpen ? '⚠️ Ouverte' : '✅ Fermées';
     document.getElementById('odometer').innerHTML = `${Math.round(vehicle.odometer * 1.60934)}<span class="unit">km</span>`;
     document.getElementById('software').textContent = vehicle.car_version?.split(' ')[0] || '—';
+
+    if (drive?.latitude && drive?.longitude) updateMap(drive.latitude, drive.longitude);
   }
 
   async function sendCommand(cmd) {
     if (!vehicleId || !accessToken) return;
-
-    const btns = document.querySelectorAll('.cmd-btn');
-    btns.forEach(b => b.classList.add('loading'));
-
+    document.querySelectorAll('.cmd-btn').forEach(b => b.classList.add('loading'));
+    addLog('Envoi: ' + cmd, '');
     try {
-      const r = await fetch(`${BACKEND}/api/command?token=${accessToken}&id=${vehicleId}&cmd=${cmd}`);
+      const r = await fetch(`${BACKEND}/api/command?token=${accessToken}&id=${vehicleId}&cmd=${cmd}`, { method:'POST' });
       const d = await r.json();
-      if (d.response?.result) {
-        toast('Commande envoyée ✓', 'ok');
-        setTimeout(loadVehicleData, 2000);
-      } else {
-        toast(d.response?.reason || 'Commande échouée', 'err');
-      }
-    } catch(e) {
-      toast('Erreur réseau', 'err');
-    } finally {
-      btns.forEach(b => b.classList.remove('loading'));
-    }
+      if (d.response?.result) { toast('✓ Commande envoyée','ok'); addLog('OK: ' + cmd,'ok'); setTimeout(loadVehicleData, 3000); }
+      else { const reason = d.response?.reason || 'Échec'; toast(reason,'err'); addLog('Échec: ' + reason,'err'); }
+    } catch(e) { toast('Erreur réseau','err'); addLog('Erreur réseau','err'); }
+    finally { document.querySelectorAll('.cmd-btn').forEach(b => b.classList.remove('loading')); }
   }
 
-  function toast(msg, type = '') {
+  function toggleSentry() { sendCommand(sentryOn ? 'set_sentry_mode?on=false' : 'set_sentry_mode?on=true'); }
+
+  async function setChargeLimit() {
+    const val = parseInt(document.getElementById('limit-input').value);
+    if (val < 50 || val > 100) { toast('Entre 50 et 100%','err'); return; }
+    try {
+      const r = await fetch(`${BACKEND}/api/command?token=${accessToken}&id=${vehicleId}&cmd=set_charge_limit&percent=${val}`, { method:'POST' });
+      const d = await r.json();
+      if (d.response?.result) { toast(`Limite → ${val}%`,'ok'); addLog(`Limite charge → ${val}%`,'ok'); }
+      else toast('Échec réglage limite','err');
+    } catch(e) { toast('Erreur réseau','err'); }
+  }
+
+  function addLog(msg, type) {
+    const list = document.getElementById('log-list');
+    const entry = document.createElement('div');
+    entry.className = 'log-entry';
+    const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    entry.innerHTML = `<span class="log-time">${time}</span><span class="log-msg ${type}">${msg}</span>`;
+    list.insertBefore(entry, list.firstChild);
+    if (list.children.length > 20) list.removeChild(list.lastChild);
+  }
+
+  function toast(msg, type='') {
     const t = document.getElementById('toast');
-    t.textContent = msg;
-    t.className = 'show ' + type;
+    t.textContent = msg; t.className = 'show ' + type;
     setTimeout(() => t.className = '', 3000);
   }
 
