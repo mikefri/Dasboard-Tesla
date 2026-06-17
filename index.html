@@ -38,6 +38,8 @@
     .dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0;}
     .dot.online{background:var(--green);box-shadow:0 0 6px var(--green);}
     .dot.sleeping{background:var(--amber);}
+    .dot.waking{background:var(--amber);animation:pulse 1s ease-in-out infinite;}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
     .btn-sm{background:none;border:1px solid var(--border);color:var(--text2);padding:5px 14px;font-size:0.72rem;font-family:'Inter',sans-serif;cursor:pointer;letter-spacing:0.05em;transition:all 0.15s;}
     .btn-sm:hover{border-color:var(--text2);color:var(--text);}
     .btn-sm.danger:hover{border-color:var(--red);color:var(--red);}
@@ -53,7 +55,8 @@
     /* WAKE */
     .wake-banner{grid-area:wake;background:rgba(245,158,11,0.07);border-bottom:1px solid var(--amber);padding:0.875rem 1.5rem;display:none;align-items:center;justify-content:space-between;gap:1rem;}
     .wake-banner p{font-size:0.82rem;color:var(--amber);}
-    .btn-wake{background:var(--amber);color:#000;border:none;padding:7px 20px;font-size:0.78rem;font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap;}
+    .btn-wake{background:var(--amber);color:#000;border:none;padding:7px 20px;font-size:0.78rem;font-family:'Inter',sans-serif;font-weight:600;cursor:pointer;white-space:nowrap;transition:opacity 0.2s;}
+    .btn-wake:disabled{opacity:0.5;cursor:not-allowed;}
 
     /* HERO */
     .hero{grid-area:hero;padding:2rem 1.5rem;position:relative;overflow:hidden;}
@@ -64,6 +67,12 @@
     .charge-bar-fill{height:100%;background:var(--green);transition:width 1s cubic-bezier(0.4,0,0.2,1);}
     .charge-bar-fill.low{background:var(--red);}
     .charge-bar-fill.mid{background:var(--amber);}
+
+    /* Sparkline */
+    .sparkline-wrap{margin-top:0.75rem;display:flex;align-items:center;gap:0.5rem;}
+    .sparkline-label{font-size:0.62rem;color:var(--text3);font-family:'DM Mono',monospace;white-space:nowrap;}
+    #sparkline{flex:1;height:28px;}
+
     .charge-meta{display:grid;grid-template-columns:repeat(3,1fr);margin-top:1.25rem;border:1px solid var(--border);}
     .charge-meta-item{padding:0.875rem;border-right:1px solid var(--border);}
     .charge-meta-item:last-child{border-right:none;}
@@ -100,7 +109,10 @@
     .temp-card label{font-size:0.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:0.1em;display:block;margin-bottom:0.5rem;}
     .temp-big{font-family:'DM Mono',monospace;font-size:2rem;font-weight:300;color:var(--text);}
     .temp-big .unit{font-size:0.9rem;color:var(--text2);}
-    .climate-actions{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;}
+    .climate-actions{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.75rem;}
+    .temp-set-row{display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;}
+    .temp-set-row label{font-size:0.72rem;color:var(--text2);white-space:nowrap;}
+    .temp-set-input{background:var(--bg3);border:1px solid var(--border2);color:var(--text);font-family:'DM Mono',monospace;font-size:0.85rem;padding:4px 8px;width:56px;text-align:center;}
 
     /* COMMANDS */
     .commands-panel{grid-area:commands;}
@@ -126,6 +138,17 @@
     #toast.ok{border-color:var(--green);color:var(--green);}
     #toast.err{border-color:var(--red);color:var(--red);}
 
+    /* CONFIRM DIALOG */
+    #confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;display:none;align-items:center;justify-content:center;}
+    #confirm-overlay.show{display:flex;}
+    .confirm-box{background:var(--bg2);border:1px solid var(--border2);padding:1.5rem;max-width:340px;width:90%;}
+    .confirm-title{font-size:0.9rem;font-weight:500;margin-bottom:0.5rem;}
+    .confirm-msg{font-size:0.8rem;color:var(--text2);margin-bottom:1.25rem;line-height:1.5;}
+    .confirm-actions{display:flex;gap:0.5rem;justify-content:flex-end;}
+    .btn-confirm{background:var(--red);color:#fff;border:none;padding:7px 18px;font-size:0.78rem;font-family:'Inter',sans-serif;font-weight:500;cursor:pointer;}
+    .btn-cancel{background:none;border:1px solid var(--border2);color:var(--text2);padding:7px 18px;font-size:0.78rem;font-family:'Inter',sans-serif;cursor:pointer;}
+    .btn-cancel:hover{border-color:var(--text2);color:var(--text);}
+
     /* RESPONSIVE */
     @media(max-width:768px){
       .main{grid-template-columns:1fr;grid-template-areas:"wake""hero""map""stats""charge-detail""climate""commands""log";padding:0;}
@@ -138,6 +161,7 @@
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="login-screen">
   <div class="login-logo">
     <svg width="32" height="32" viewBox="0 0 64 64" fill="none">
@@ -152,6 +176,7 @@
   <button class="btn-login" onclick="login()">Connexion Tesla</button>
 </div>
 
+<!-- DASHBOARD -->
 <div id="dashboard">
   <header>
     <div class="header-left">
@@ -179,11 +204,13 @@
 
   <div class="main">
 
+    <!-- WAKE BANNER -->
     <div class="wake-banner" id="wake-banner">
       <p>⚡ Véhicule en veille — réveillez-le pour accéder aux données temps réel.</p>
-      <button class="btn-wake" onclick="sendCommand('wake_up')">Réveiller</button>
+      <button class="btn-wake" id="btn-wake" onclick="wakeAndPoll()">Réveiller</button>
     </div>
 
+    <!-- HERO BATTERIE -->
     <div class="panel hero">
       <div class="panel-label">
         <span>Batterie</span>
@@ -193,6 +220,10 @@
       <div class="charge-bar-track">
         <div class="charge-bar-fill" id="charge-bar" style="width:0%"></div>
       </div>
+      <div class="sparkline-wrap">
+        <span class="sparkline-label">2h</span>
+        <svg id="sparkline" viewBox="0 0 200 28" preserveAspectRatio="none"></svg>
+      </div>
       <div class="charge-meta">
         <div class="charge-meta-item"><span class="meta-label">Autonomie</span><span class="meta-val" id="range-val">—</span></div>
         <div class="charge-meta-item"><span class="meta-label">Limite</span><span class="meta-val" id="charge-limit">—</span></div>
@@ -200,11 +231,13 @@
       </div>
     </div>
 
+    <!-- MAP -->
     <div class="map-panel">
       <div id="map"></div>
       <div class="map-overlay" id="map-address">Localisation indisponible</div>
     </div>
 
+    <!-- STATS -->
     <div class="stats-row">
       <div class="stat"><label>Temp. intérieure</label><div class="val" id="temp-inside">—<span class="unit">°C</span></div></div>
       <div class="stat"><label>Temp. extérieure</label><div class="val" id="temp-outside">—<span class="unit">°C</span></div></div>
@@ -213,6 +246,7 @@
       <div class="stat"><label>Logiciel</label><div class="val" id="software" style="font-size:0.9rem">—</div></div>
     </div>
 
+    <!-- DÉTAILS RECHARGE -->
     <div class="panel charge-detail">
       <div class="panel-label">Détails recharge</div>
       <div class="charge-detail-row"><span>Puissance</span><strong id="charge-power">— kW</strong></div>
@@ -229,6 +263,7 @@
       </div>
     </div>
 
+    <!-- CLIMATISATION -->
     <div class="panel climate-panel">
       <div class="panel-label">Climatisation</div>
       <div class="temp-display">
@@ -239,22 +274,30 @@
         <button class="cmd-btn" onclick="sendCommand('auto_conditioning_start')" style="background:var(--bg4)"><span class="cmd-icon">❄️</span>Clim ON</button>
         <button class="cmd-btn" onclick="sendCommand('auto_conditioning_stop')" style="background:var(--bg4)"><span class="cmd-icon">⏹</span>Clim OFF</button>
       </div>
+      <div class="temp-set-row">
+        <label>Consigne</label>
+        <input type="number" class="temp-set-input" id="temp-input" min="16" max="28" value="21" step="0.5"/>
+        <span style="font-size:0.72rem;color:var(--text2);">°C</span>
+        <button class="btn-set" onclick="setTemp()">Appliquer</button>
+      </div>
     </div>
 
+    <!-- COMMANDES -->
     <div class="panel commands-panel">
       <div class="panel-label">Commandes véhicule</div>
       <div class="cmd-grid">
         <button class="cmd-btn" onclick="sendCommand('door_lock')"><span class="cmd-icon">🔒</span>Verrouiller</button>
-        <button class="cmd-btn" onclick="sendCommand('door_unlock')"><span class="cmd-icon">🔓</span>Déverrouiller</button>
+        <button class="cmd-btn" onclick="confirmCmd('door_unlock','Déverrouiller le véhicule ?','Cette action ouvre toutes les portes.')"><span class="cmd-icon">🔓</span>Déverrouiller</button>
         <button class="cmd-btn" onclick="sendCommand('charge_start')"><span class="cmd-icon">⚡</span>Recharge ON</button>
         <button class="cmd-btn" onclick="sendCommand('charge_stop')"><span class="cmd-icon">🔌</span>Recharge OFF</button>
         <button class="cmd-btn" onclick="toggleSentry()"><span class="cmd-icon">👁</span>Sentry</button>
         <button class="cmd-btn" onclick="sendCommand('honk_horn')"><span class="cmd-icon">📯</span>Klaxon</button>
         <button class="cmd-btn" onclick="sendCommand('flash_lights')"><span class="cmd-icon">💡</span>Flash phares</button>
-        <button class="cmd-btn" onclick="sendCommand('remote_start_drive')"><span class="cmd-icon">🚗</span>Démarrage</button>
+        <button class="cmd-btn" onclick="confirmCmd('remote_start_drive','Démarrer le véhicule ?','Le moteur démarrera à distance.')"><span class="cmd-icon">🚗</span>Démarrage</button>
       </div>
     </div>
 
+    <!-- LOG -->
     <div class="log-panel">
       <div class="panel-label">Journal des actions</div>
       <div class="log-list" id="log-list">
@@ -265,43 +308,125 @@
   </div>
 </div>
 
+<!-- TOAST -->
 <div id="toast"></div>
+
+<!-- CONFIRM DIALOG -->
+<div id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirm-title">Confirmer</div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="confirm-actions">
+      <button class="btn-cancel" onclick="closeConfirm()">Annuler</button>
+      <button class="btn-confirm" id="confirm-ok">Confirmer</button>
+    </div>
+  </div>
+</div>
 
 <script>
   const BACKEND = 'https://mikdrive-backend-production.up.railway.app';
-  let accessToken = null, vehicleId = null, map = null, marker = null, sentryOn = false;
+  let accessToken = null, refreshToken = null, tokenExpiry = null;
+  let vehicleId = null, map = null, marker = null, sentryOn = false;
+  let refreshInterval = null, pollInterval = null;
+  let batteryHistory = [];
+
+  /* ─── INIT ──────────────────────────────────────────────────── */
 
   function init() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('access_token');
     if (token) {
       accessToken = token;
-      localStorage.setItem('mk_token', token);
-      const refresh = params.get('refresh_token');
-      if (refresh) localStorage.setItem('mk_refresh', refresh);
+      refreshToken = params.get('refresh_token');
+      const expiresIn = parseInt(params.get('expires_in') || '28800');
+      tokenExpiry = Date.now() + expiresIn * 1000;
+      saveTokens();
       window.history.replaceState({}, '', window.location.pathname);
       showDashboard();
     } else {
-      const saved = localStorage.getItem('mk_token');
-      if (saved) { accessToken = saved; showDashboard(); }
+      loadTokens();
+      if (accessToken) showDashboard();
     }
   }
+
+  function saveTokens() {
+    localStorage.setItem('mk_token', accessToken);
+    if (refreshToken) localStorage.setItem('mk_refresh', refreshToken);
+    if (tokenExpiry) localStorage.setItem('mk_expiry', tokenExpiry);
+  }
+
+  function loadTokens() {
+    accessToken = localStorage.getItem('mk_token');
+    refreshToken = localStorage.getItem('mk_refresh');
+    tokenExpiry = parseInt(localStorage.getItem('mk_expiry') || '0');
+    batteryHistory = JSON.parse(localStorage.getItem('mk_battery_history') || '[]');
+  }
+
+  /* ─── TOKEN REFRESH ─────────────────────────────────────────── */
+
+  async function ensureValidToken() {
+    if (!tokenExpiry || Date.now() < tokenExpiry - 60000) return true; // encore valide
+    if (!refreshToken) { logout(); return false; }
+    try {
+      addLog('Renouvellement du token...', '');
+      const r = await fetch(`${BACKEND}/api/refresh?refresh_token=${refreshToken}`, { method: 'POST' });
+      const d = await r.json();
+      if (d.access_token) {
+        accessToken = d.access_token;
+        if (d.refresh_token) refreshToken = d.refresh_token;
+        tokenExpiry = Date.now() + (d.expires_in || 28800) * 1000;
+        saveTokens();
+        addLog('Token renouvelé', 'ok');
+        return true;
+      } else {
+        addLog('Session expirée, reconnexion requise', 'err');
+        logout();
+        return false;
+      }
+    } catch(e) {
+      addLog('Erreur renouvellement token', 'err');
+      return false;
+    }
+  }
+
+  /* ─── AUTH ──────────────────────────────────────────────────── */
 
   function login() { window.location.href = BACKEND + '/api/auth'; }
 
   function logout() {
-    localStorage.clear(); accessToken = null; vehicleId = null;
+    localStorage.clear();
+    accessToken = null; vehicleId = null;
+    if (refreshInterval) clearInterval(refreshInterval);
+    if (pollInterval) clearInterval(pollInterval);
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('dashboard').style.display = 'none';
   }
+
+  /* ─── DASHBOARD ─────────────────────────────────────────────── */
 
   function showDashboard() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
     initMap();
     loadVehicleData();
-    setInterval(loadVehicleData, 5 * 60 * 1000);
+    // Pause si onglet caché
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        if (refreshInterval) { clearInterval(refreshInterval); refreshInterval = null; }
+      } else {
+        loadVehicleData();
+        startAutoRefresh();
+      }
+    });
+    startAutoRefresh();
   }
+
+  function startAutoRefresh() {
+    if (refreshInterval) clearInterval(refreshInterval);
+    refreshInterval = setInterval(loadVehicleData, 5 * 60 * 1000);
+  }
+
+  /* ─── MAP ───────────────────────────────────────────────────── */
 
   function initMap() {
     if (map) return;
@@ -322,57 +447,118 @@
         const a = d.address;
         const str = [a.road, a.city || a.town || a.village].filter(Boolean).join(', ');
         document.getElementById('map-address').textContent = str || 'Position connue';
-      }).catch(() => {});
+      })
+      .catch(() => {
+        document.getElementById('map-address').textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+      });
   }
+
+  /* ─── SPARKLINE ─────────────────────────────────────────────── */
+
+  function saveBatteryHistory(pct) {
+    const now = Date.now();
+    batteryHistory.push({ t: now, v: pct });
+    // Garder 2h max (24 entrées à 5min)
+    const cutoff = now - 2 * 60 * 60 * 1000;
+    batteryHistory = batteryHistory.filter(e => e.t >= cutoff);
+    localStorage.setItem('mk_battery_history', JSON.stringify(batteryHistory));
+    drawSparkline();
+  }
+
+  function drawSparkline() {
+    const svg = document.getElementById('sparkline');
+    if (batteryHistory.length < 2) { svg.innerHTML = ''; return; }
+    const W = 200, H = 28, pad = 2;
+    const vals = batteryHistory.map(e => e.v);
+    const min = Math.max(0, Math.min(...vals) - 5);
+    const max = Math.min(100, Math.max(...vals) + 5);
+    const range = max - min || 1;
+    const pts = batteryHistory.map((e, i) => {
+      const x = pad + (i / (batteryHistory.length - 1)) * (W - pad * 2);
+      const y = H - pad - ((e.v - min) / range) * (H - pad * 2);
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
+    });
+    const last = batteryHistory[batteryHistory.length - 1].v;
+    const color = last < 20 ? '#e31937' : last < 40 ? '#f59e0b' : '#22c55e';
+    svg.innerHTML = `<polyline points="${pts.join(' ')}" fill="none" stroke="${color}" stroke-width="1.5" stroke-linejoin="round" opacity="0.8"/>`;
+  }
+
+  /* ─── LOAD DATA ─────────────────────────────────────────────── */
 
   async function loadVehicleData() {
     if (!accessToken) return;
+    const valid = await ensureValidToken();
+    if (!valid) return;
+
     document.getElementById('refresh-ring').classList.add('active');
 
     if (!vehicleId) {
       try {
         const r = await fetch(`${BACKEND}/api/vehicles?token=${accessToken}`);
+        if (r.status === 401) { logout(); return; }
         const d = await r.json();
         if (d.response?.length > 0) {
           vehicleId = d.response[0].id_s;
           document.getElementById('vehicle-name').textContent = d.response[0].display_name || 'Model 3 Highland';
-        } else { addLog('Aucun véhicule trouvé','err'); document.getElementById('refresh-ring').classList.remove('active'); return; }
-      } catch(e) { addLog('Erreur connexion backend','err'); document.getElementById('refresh-ring').classList.remove('active'); return; }
+        } else {
+          addLog('Aucun véhicule trouvé', 'err');
+          document.getElementById('refresh-ring').classList.remove('active');
+          return;
+        }
+      } catch(e) {
+        addLog('Erreur connexion backend', 'err');
+        document.getElementById('refresh-ring').classList.remove('active');
+        return;
+      }
     }
 
     try {
       const r = await fetch(`${BACKEND}/api/vehicle?token=${accessToken}&id=${vehicleId}`);
-      const d = await r.json();
       document.getElementById('refresh-ring').classList.remove('active');
+
+      if (r.status === 401) { logout(); return; }
+
+      const d = await r.json();
 
       if (d.error || !d.response) {
         document.getElementById('wake-banner').style.display = 'flex';
-        document.getElementById('status-dot').className = 'dot sleeping';
-        document.getElementById('status-text').textContent = 'En veille';
-        addLog('Véhicule en veille','err');
+        setStatus('sleeping', 'En veille');
+        addLog('Véhicule en veille', 'err');
         return;
       }
 
       document.getElementById('wake-banner').style.display = 'none';
-      document.getElementById('status-dot').className = 'dot online';
-      document.getElementById('status-text').textContent = 'En ligne';
+      setStatus('online', 'En ligne');
       document.getElementById('last-updated').textContent = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
       renderData(d.response);
-      addLog('Données actualisées','ok');
+      addLog('Données actualisées', 'ok');
     } catch(e) {
       document.getElementById('refresh-ring').classList.remove('active');
-      addLog('Erreur chargement','err');
+      addLog('Erreur chargement', 'err');
     }
   }
 
-  function renderData(v) {
-    const charge = v.charge_state, climate = v.climate_state, vehicle = v.vehicle_state, drive = v.drive_state;
+  function setStatus(state, text) {
+    document.getElementById('status-dot').className = 'dot ' + state;
+    document.getElementById('status-text').textContent = text;
+  }
 
+  /* ─── RENDER ────────────────────────────────────────────────── */
+
+  function renderData(v) {
+    renderCharge(v.charge_state);
+    renderClimate(v.climate_state);
+    renderVehicle(v.vehicle_state);
+    renderDrive(v.drive_state);
+  }
+
+  function renderCharge(charge) {
     const pct = charge.battery_level;
     document.getElementById('charge-val').innerHTML = `${pct}<span class="pct">%</span>`;
     const bar = document.getElementById('charge-bar');
     bar.style.width = pct + '%';
     bar.className = 'charge-bar-fill' + (pct < 20 ? ' low' : pct < 40 ? ' mid' : '');
+    saveBatteryHistory(pct);
 
     const range = Math.round((charge.battery_range || 0) * 1.60934);
     document.getElementById('range-val').textContent = range + ' km';
@@ -393,50 +579,174 @@
 
     document.getElementById('charge-amps').textContent = (charge.charger_actual_current || 0) + ' A';
     document.getElementById('charge-volts').textContent = (charge.charger_voltage || 0) + ' V';
+  }
 
-    sentryOn = vehicle.sentry_mode || false;
-    document.getElementById('sentry-state').textContent = sentryOn ? '🟢 Actif' : '⚫ Inactif';
-
+  function renderClimate(climate) {
     const tin = (climate.inside_temp || 0).toFixed(1);
     const tout = (climate.outside_temp || 0).toFixed(1);
     document.getElementById('temp-inside').innerHTML = `${tin}<span class="unit">°C</span>`;
     document.getElementById('temp-outside').innerHTML = `${tout}<span class="unit">°C</span>`;
     document.getElementById('temp-in-big').innerHTML = `${tin}<span class="unit">°C</span>`;
     document.getElementById('temp-out-big').innerHTML = `${tout}<span class="unit">°C</span>`;
+  }
 
+  function renderVehicle(vehicle) {
+    sentryOn = vehicle.sentry_mode || false;
+    document.getElementById('sentry-state').textContent = sentryOn ? '🟢 Actif' : '⚫ Inactif';
     const anyOpen = vehicle.df || vehicle.dr || vehicle.pf || vehicle.pr || vehicle.ft || vehicle.rt;
     document.getElementById('doors-state').textContent = anyOpen ? '⚠️ Ouverte' : '✅ Fermées';
     document.getElementById('odometer').innerHTML = `${Math.round(vehicle.odometer * 1.60934)}<span class="unit">km</span>`;
     document.getElementById('software').textContent = vehicle.car_version?.split(' ')[0] || '—';
+  }
 
+  function renderDrive(drive) {
     if (drive?.latitude && drive?.longitude) updateMap(drive.latitude, drive.longitude);
   }
 
+  /* ─── WAKE UP ───────────────────────────────────────────────── */
+
+  async function wakeAndPoll() {
+    if (!vehicleId || !accessToken) return;
+    const btn = document.getElementById('btn-wake');
+    btn.disabled = true;
+    btn.textContent = 'Réveil en cours...';
+    setStatus('waking', 'Réveil...');
+    addLog('Envoi commande de réveil...', '');
+
+    try {
+      const r = await fetch(`${BACKEND}/api/wake?token=${accessToken}&id=${vehicleId}`, { method: 'POST' });
+      const d = await r.json();
+
+      if (r.ok) {
+        toast('Réveil en cours, patientez...', 'ok');
+        addLog('Wake envoyé — polling toutes les 5s (max 60s)', 'ok');
+        let attempts = 0;
+        if (pollInterval) clearInterval(pollInterval);
+        pollInterval = setInterval(async () => {
+          attempts++;
+          addLog(`Tentative ${attempts}/12...`, '');
+          await loadVehicleData();
+          // Si le banner de veille a disparu → véhicule réveillé
+          if (document.getElementById('wake-banner').style.display === 'none') {
+            clearInterval(pollInterval);
+            btn.disabled = false;
+            btn.textContent = 'Réveiller';
+            toast('Véhicule en ligne !', 'ok');
+            addLog('Véhicule réveillé avec succès', 'ok');
+          } else if (attempts >= 12) {
+            clearInterval(pollInterval);
+            btn.disabled = false;
+            btn.textContent = 'Réveiller';
+            setStatus('sleeping', 'En veille');
+            toast('Timeout réveil — réessayez', 'err');
+            addLog('Timeout réveil après 60s', 'err');
+          }
+        }, 5000);
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Réveiller';
+        setStatus('sleeping', 'En veille');
+        toast('Échec réveil: ' + (d.error || r.status), 'err');
+        addLog('Échec wake: ' + JSON.stringify(d), 'err');
+      }
+    } catch(e) {
+      btn.disabled = false;
+      btn.textContent = 'Réveiller';
+      setStatus('sleeping', 'En veille');
+      toast('Erreur réseau', 'err');
+      addLog('Erreur wake: ' + e.message, 'err');
+    }
+  }
+
+  /* ─── COMMANDS ──────────────────────────────────────────────── */
+
   async function sendCommand(cmd) {
     if (!vehicleId || !accessToken) return;
+    const valid = await ensureValidToken();
+    if (!valid) return;
     document.querySelectorAll('.cmd-btn').forEach(b => b.classList.add('loading'));
     addLog('Envoi: ' + cmd, '');
     try {
       const r = await fetch(`${BACKEND}/api/command?token=${accessToken}&id=${vehicleId}&cmd=${cmd}`, { method:'POST' });
+      if (r.status === 401) { logout(); return; }
       const d = await r.json();
-      if (d.response?.result) { toast('✓ Commande envoyée','ok'); addLog('OK: ' + cmd,'ok'); setTimeout(loadVehicleData, 3000); }
-      else { const reason = d.response?.reason || 'Échec'; toast(reason,'err'); addLog('Échec: ' + reason,'err'); }
-    } catch(e) { toast('Erreur réseau','err'); addLog('Erreur réseau','err'); }
-    finally { document.querySelectorAll('.cmd-btn').forEach(b => b.classList.remove('loading')); }
+      if (d.response?.result) {
+        toast('✓ Commande envoyée', 'ok');
+        addLog('OK: ' + cmd, 'ok');
+        setTimeout(loadVehicleData, 3000);
+      } else {
+        const reason = d.response?.reason || d.error || 'Échec';
+        toast(reason, 'err');
+        addLog('Échec: ' + reason, 'err');
+      }
+    } catch(e) {
+      toast('Erreur réseau', 'err');
+      addLog('Erreur réseau: ' + e.message, 'err');
+    } finally {
+      document.querySelectorAll('.cmd-btn').forEach(b => b.classList.remove('loading'));
+    }
   }
 
-  function toggleSentry() { sendCommand(sentryOn ? 'set_sentry_mode?on=false' : 'set_sentry_mode?on=true'); }
+  function toggleSentry() {
+    const cmd = sentryOn ? 'set_sentry_mode' : 'set_sentry_mode';
+    const on = !sentryOn;
+    fetch(`${BACKEND}/api/command?token=${accessToken}&id=${vehicleId}&cmd=${cmd}&on=${on}`, { method:'POST' })
+      .then(r => r.json())
+      .then(d => {
+        if (d.response?.result) {
+          sentryOn = on;
+          document.getElementById('sentry-state').textContent = sentryOn ? '🟢 Actif' : '⚫ Inactif';
+          toast(`Sentry ${sentryOn ? 'activé' : 'désactivé'}`, 'ok');
+          addLog(`Sentry → ${sentryOn ? 'ON' : 'OFF'}`, 'ok');
+        } else {
+          toast('Échec Sentry', 'err');
+        }
+      }).catch(() => toast('Erreur réseau', 'err'));
+  }
 
   async function setChargeLimit() {
     const val = parseInt(document.getElementById('limit-input').value);
-    if (val < 50 || val > 100) { toast('Entre 50 et 100%','err'); return; }
+    if (val < 50 || val > 100) { toast('Entre 50 et 100%', 'err'); return; }
     try {
       const r = await fetch(`${BACKEND}/api/command?token=${accessToken}&id=${vehicleId}&cmd=set_charge_limit&percent=${val}`, { method:'POST' });
       const d = await r.json();
-      if (d.response?.result) { toast(`Limite → ${val}%`,'ok'); addLog(`Limite charge → ${val}%`,'ok'); }
-      else toast('Échec réglage limite','err');
-    } catch(e) { toast('Erreur réseau','err'); }
+      if (d.response?.result) { toast(`Limite → ${val}%`, 'ok'); addLog(`Limite charge → ${val}%`, 'ok'); }
+      else toast('Échec réglage limite', 'err');
+    } catch(e) { toast('Erreur réseau', 'err'); }
   }
+
+  async function setTemp() {
+    const val = parseFloat(document.getElementById('temp-input').value);
+    if (val < 16 || val > 28) { toast('Entre 16 et 28°C', 'err'); return; }
+    try {
+      const r = await fetch(`${BACKEND}/api/command?token=${accessToken}&id=${vehicleId}&cmd=set_temps&driver_temp=${val}&passenger_temp=${val}`, { method:'POST' });
+      const d = await r.json();
+      if (d.response?.result) { toast(`Consigne → ${val}°C`, 'ok'); addLog(`Clim consigne → ${val}°C`, 'ok'); }
+      else toast('Échec réglage température', 'err');
+    } catch(e) { toast('Erreur réseau', 'err'); }
+  }
+
+  /* ─── CONFIRM DIALOG ────────────────────────────────────────── */
+
+  let pendingCmd = null;
+
+  function confirmCmd(cmd, title, msg) {
+    pendingCmd = cmd;
+    document.getElementById('confirm-title').textContent = title;
+    document.getElementById('confirm-msg').textContent = msg;
+    document.getElementById('confirm-overlay').classList.add('show');
+    document.getElementById('confirm-ok').onclick = () => {
+      closeConfirm();
+      sendCommand(pendingCmd);
+    };
+  }
+
+  function closeConfirm() {
+    document.getElementById('confirm-overlay').classList.remove('show');
+    pendingCmd = null;
+  }
+
+  /* ─── LOG & TOAST ───────────────────────────────────────────── */
 
   function addLog(msg, type) {
     const list = document.getElementById('log-list');
@@ -445,13 +755,14 @@
     const time = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
     entry.innerHTML = `<span class="log-time">${time}</span><span class="log-msg ${type}">${msg}</span>`;
     list.insertBefore(entry, list.firstChild);
-    if (list.children.length > 20) list.removeChild(list.lastChild);
+    if (list.children.length > 30) list.removeChild(list.lastChild);
   }
 
   function toast(msg, type='') {
     const t = document.getElementById('toast');
     t.textContent = msg; t.className = 'show ' + type;
-    setTimeout(() => t.className = '', 3000);
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.className = '', 3500);
   }
 
   init();
